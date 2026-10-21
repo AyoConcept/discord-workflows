@@ -1,0 +1,46 @@
+name: Daily digest
+
+# Posts a morning summary of open issues and pull requests to Discord.
+# Cron is in UTC: "0 12 * * 1-5" = 08:00 ET, weekdays. Adjust to taste.
+# Also runs on demand via "Run workflow" in the Actions tab.
+"on":
+  schedule:
+    - cron: "0 12 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  issues: read
+  pull-requests: read
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const full = `${owner}/${repo}`;
+            const all = await github.paginate(github.rest.issues.listForRepo, {
+              owner, repo, state: "open",
+            });
+            const items = all.filter(i => !i.pull_request);
+            const prs = all.filter(i => i.pull_request);
+            const age = d => Math.floor((Date.now() - new Date(d)) / 864e5);
+            const fmt = list => list.slice(0, 10).map(i =>
+              `• #${i.number} ${i.title} — ${i.user.login} (${age(i.created_at)}d)`);
+            const lines = [`☀️ **Daily digest — ${full}**`, ``,
+              `**Issues (${items.length} open)**`,
+              ...(fmt(items).length ? fmt(items) : [`_none_`]), ``,
+              `**Pull requests (${prs.length} open)**`,
+              ...(fmt(prs).length ? fmt(prs) : [`_none_`]), ``,
+              `https://github.com/${full}`];
+            let msg = lines.join("\n");
+            if (msg.length > 1900) msg = msg.slice(0, 1900) + "…";
+            await fetch(process.env.DISCORD_WEBHOOK, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ content: msg }),
+            });
