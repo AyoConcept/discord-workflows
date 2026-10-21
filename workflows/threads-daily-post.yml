@@ -1,14 +1,16 @@
-name: Daily Threads posts
+name: Daily Threads post (@smartaiworkflows)
 
-# Fully automatic daily Threads posts — zero taps.
-# Picks one evergreen post per account from the bank files, rotating by day of year,
+# Fully automatic daily Threads post — zero taps.
+# Picks one evergreen post from the bank, rotating by day of year,
 # and publishes via the Threads API (create container -> publish).
 #
 # Required repo secrets:
-#   THREADS_USER_ID_AYOOCONCEPT / THREADS_TOKEN_AYOOCONCEPT
-#   THREADS_USER_ID_SMARTAI     / THREADS_TOKEN_SMARTAI
-# Bank files: threads/bank-ayooconcept.txt, threads/bank-smartaiworkflows.txt
+#   THREADS_USER_ID_SMARTAI / THREADS_TOKEN_SMARTAI
+# Bank file: threads/bank-smartaiworkflows.txt
 # (posts separated by a line containing exactly ---POST---)
+#
+# NOTE: @ayooconcept is intentionally NOT auto-posted — the user reviews
+# each draft before publishing (handled via the Muse approval flow).
 
 on:
   schedule:
@@ -19,45 +21,6 @@ permissions:
   contents: read
 
 jobs:
-  post-ayooconcept:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Post today's thread
-        env:
-          THREADS_USER_ID: ${{ secrets.THREADS_USER_ID_AYOOCONCEPT }}
-          THREADS_TOKEN: ${{ secrets.THREADS_TOKEN_AYOOCONCEPT }}
-          BANK_FILE: threads/bank-ayooconcept.txt
-        run: |
-          python3 - <<'PYEOF'
-          import datetime, json, os, urllib.parse, urllib.request
-
-          posts = [p.strip() for p in open(os.environ["BANK_FILE"], encoding="utf-8").read().split("---POST---") if p.strip()]
-          if not posts:
-              raise SystemExit("bank file is empty")
-          idx = datetime.date.today().timetuple().tm_yday % len(posts)
-          text = posts[idx]
-          if len(text) > 500:
-              raise SystemExit(f"post too long ({len(text)} chars)")
-
-          uid = os.environ["THREADS_USER_ID"]
-          token = os.environ["THREADS_TOKEN"]
-
-          def api(path, data):
-              req = urllib.request.Request(
-                  f"https://graph.threads.net/v1.0/{uid}{path}",
-                  data=urllib.parse.urlencode(data).encode(),
-                  method="POST",
-              )
-              with urllib.request.urlopen(req, timeout=30) as r:
-                  return json.load(r)
-
-          container = api("/threads", {"media_type": "TEXT", "text": text, "access_token": token})
-          print("container:", container.get("id"))
-          result = api("/threads_publish", {"creation_id": container["id"], "access_token": token})
-          print("published:", result.get("id"))
-          PYEOF
-
   post-smartai:
     runs-on: ubuntu-latest
     steps:
