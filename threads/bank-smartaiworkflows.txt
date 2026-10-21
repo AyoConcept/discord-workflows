@@ -1,0 +1,35 @@
+AI workflow tip: stop starting from a blank prompt. Save your 5 best prompts as templates with fill-in-the-blank slots. Consistent results in half the time.
+---POST---
+The best AI automation isn't the fanciest — it's the boring task you do 20x a week. Start there. Automate the repetitive, keep the creative.
+---POST---
+Automation idea: have AI turn your meeting notes into action items with owners and deadlines, auto-sent to the team. One prompt, zero follow-up chaos.
+---POST---
+New to AI workflows? Pick ONE recurring task, write down every step, then automate step by step. Trying to automate everything at once is how projects die.
+---POST---
+AI tip: give the model context, not just commands. "Write an email" is weak. "Write a follow-up to a client who went quiet after a demo — warm but direct" gets you something usable.
+---POST---
+Automation idea for daily life: an AI that reads your inbox every morning and gives you a 5-bullet briefing — what's urgent, what can wait, what needs a reply.
+---POST---
+The AI industry moves fast, but fundamentals don't: clear inputs, good examples, and checking the output. Master those and every new model gets easier.
+---POST---
+Workflow tip: chain small AI steps instead of one giant prompt. Draft → critique → revise beats "write me the perfect thing" every single time.
+---POST---
+Automation idea: turn customer feedback into a weekly AI summary — top complaints, feature requests, sentiment trend. Product decisions get 10x easier.
+---POST---
+Stop paying for 5 AI subscriptions. Most people need one strong model + good prompts. Audit your stack quarterly.
+---POST---
+AI workflow tip: set a "review gate." Let AI draft freely, but nothing ships without human eyes. Speed AND quality — that's the whole game.
+---POST---
+Every business has a "spreadsheet of doom" — the one nobody wants to maintain. That's your first AI automation candidate. Start there.
+---POST---
+The people winning with AI aren't the ones with the best tools — they're the ones who built the habit. 15 minutes a day beats a weekend crash course.
+---POST---
+Automation idea: AI-powered content repurposing. One long post becomes a thread, a newsletter blurb, and short-form scripts. Create once, distribute everywhere.
+---POST---
+Prompt engineering in one sentence: be the manager you wish you had — clear goals, good examples, and feedback on the draft.
+---POST---
+AI tip: keep a "prompt journal." When a prompt works great, save it. In 3 months you'll have a personal playbook worth more than any course.
+---POST---
+Watch the AI industry, but don't chase every launch. New models drop weekly; your workflow problems change yearly. Solve YOUR problem, not the hype cycle.
+---POST---
+Automation idea for creators: an AI assistant that turns raw voice notes into polished drafts while keeping your voice. Talk it out, ship it fast.
