@@ -15,6 +15,10 @@ name: Daily Threads post (@smartaiworkflows)
 # Hardened 2026-11-10 after run #2 failed at publish with a bare HTTP 400:
 # the script now prints the API error body on failure, polls the container
 # status until FINISHED before publishing, and retries publish once.
+#
+# Fix 2026-11-10 (run #3): the status field is `status`, not `status_code`
+# (status_code is the Instagram field). The retry re-checks status first
+# so it can never double-post.
 
 on:
   schedule:
@@ -75,6 +79,10 @@ jobs:
                   print("API error:", e.code, e.read().decode("utf-8", "replace"))
                   raise
 
+          def container_status(cid):
+              info = api_get(f"/{cid}", {"fields": "status,error_message", "access_token": token})
+              return info.get("status"), info.get("error_message")
+
           container = api_post("/threads", {"media_type": "TEXT", "text": text, "access_token": token})
           cid = container.get("id")
           print("container:", cid)
@@ -83,31 +91,45 @@ jobs:
           status = None
           for _ in range(12):
               try:
-                  info = api_get(f"/{cid}", {"fields": "status_code", "access_token": token})
-                  status = info.get("status_code")
+                  status, err = container_status(cid)
               except urllib.error.HTTPError:
-                  status = None
+                  status, err = None, None
                   print("status check failed, retrying...")
-              print("container status:", status)
+              print("container status:", status, err or "")
               if status == "FINISHED":
                   break
+              if status == "PUBLISHED":
+                  print("container already published, nothing to do")
+                  raise SystemExit(0)
               if status == "ERROR":
-                  raise SystemExit("container failed with status ERROR")
-              time.sleep(5)
+                  raise SystemExit(f"container failed: {err}")
+              if status == "EXPIRED":
+                  raise SystemExit("container expired before publish")
+              time.sleep(10)
           else:
               raise SystemExit("container never reached FINISHED")
 
-          # Publish, with one retry on failure.
-          published = None
-          for attempt in (1, 2):
+          # Publish, with one retry. Re-check status before retrying so a
+          # retry never double-posts (a publish can succeed server-side
+          # and still return an error).
+          def do_publish():
+              return api_post("/threads_publish", {"creation_id": cid, "access_token": token})
+
+          try:
+              published = do_publish()
+          except urllib.error.HTTPError:
+              print("publish attempt 1 failed, checking status before retry...")
+              time.sleep(10)
               try:
-                  published = api_post("/threads_publish", {"creation_id": cid, "access_token": token})
-                  break
+                  status, _ = container_status(cid)
               except urllib.error.HTTPError:
-                  print(f"publish attempt {attempt} failed")
-                  if attempt == 1:
-                      time.sleep(10)
-          if not published:
-              raise SystemExit("publish failed after 2 attempts")
+                  status = None
+              if status == "PUBLISHED":
+                  print("publish actually went through, container is PUBLISHED")
+                  published = {"id": cid}
+              elif status in ("FINISHED", None):
+                  published = do_publish()
+              else:
+                  raise SystemExit(f"not retrying, container status is {status}")
           print("published:", published.get("id"))
           PYEOF
