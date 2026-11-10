@@ -11,6 +11,10 @@ name: Daily Threads post (@smartaiworkflows)
 #
 # NOTE: @ayooconcept is intentionally NOT auto-posted — the user reviews
 # each draft before publishing (handled via the Muse approval flow).
+#
+# Hardened 2026-11-10 after run #2 failed at publish with a bare HTTP 400:
+# the script now prints the API error body on failure, polls the container
+# status until FINISHED before publishing, and retries publish once.
 
 on:
   schedule:
@@ -32,7 +36,7 @@ jobs:
           BANK_FILE: threads/bank-smartaiworkflows.txt
         run: |
           python3 - <<'PYEOF'
-          import datetime, json, os, urllib.parse, urllib.request
+          import datetime, json, os, time, urllib.error, urllib.parse, urllib.request
 
           posts = [p.strip() for p in open(os.environ["BANK_FILE"], encoding="utf-8").read().split("---POST---") if p.strip()]
           if not posts:
@@ -44,18 +48,66 @@ jobs:
 
           uid = os.environ["THREADS_USER_ID"]
           token = os.environ["THREADS_TOKEN"]
+          BASE = f"https://graph.threads.net/v1.0/{uid}"
 
-          def api(path, data):
+          def api_post(path, data):
               req = urllib.request.Request(
-                  f"https://graph.threads.net/v1.0/{uid}{path}",
+                  f"{BASE}{path}",
                   data=urllib.parse.urlencode(data).encode(),
                   method="POST",
               )
-              with urllib.request.urlopen(req, timeout=30) as r:
-                  return json.load(r)
+              try:
+                  with urllib.request.urlopen(req, timeout=30) as r:
+                      return json.load(r)
+              except urllib.error.HTTPError as e:
+                  print("API error:", e.code, e.read().decode("utf-8", "replace"))
+                  raise
 
-          container = api("/threads", {"media_type": "TEXT", "text": text, "access_token": token})
-          print("container:", container.get("id"))
-          result = api("/threads_publish", {"creation_id": container["id"], "access_token": token})
-          print("published:", result.get("id"))
+          def api_get(path, params):
+              qs = urllib.parse.urlencode(params)
+              req = urllib.request.Request(
+                  f"https://graph.threads.net/v1.0{path}?{qs}", method="GET"
+              )
+              try:
+                  with urllib.request.urlopen(req, timeout=30) as r:
+                      return json.load(r)
+              except urllib.error.HTTPError as e:
+                  print("API error:", e.code, e.read().decode("utf-8", "replace"))
+                  raise
+
+          container = api_post("/threads", {"media_type": "TEXT", "text": text, "access_token": token})
+          cid = container.get("id")
+          print("container:", cid)
+
+          # Wait until the container is ready to publish.
+          status = None
+          for _ in range(12):
+              try:
+                  info = api_get(f"/{cid}", {"fields": "status_code", "access_token": token})
+                  status = info.get("status_code")
+              except urllib.error.HTTPError:
+                  status = None
+                  print("status check failed, retrying...")
+              print("container status:", status)
+              if status == "FINISHED":
+                  break
+              if status == "ERROR":
+                  raise SystemExit("container failed with status ERROR")
+              time.sleep(5)
+          else:
+              raise SystemExit("container never reached FINISHED")
+
+          # Publish, with one retry on failure.
+          published = None
+          for attempt in (1, 2):
+              try:
+                  published = api_post("/threads_publish", {"creation_id": cid, "access_token": token})
+                  break
+              except urllib.error.HTTPError:
+                  print(f"publish attempt {attempt} failed")
+                  if attempt == 1:
+                      time.sleep(10)
+          if not published:
+              raise SystemExit("publish failed after 2 attempts")
+          print("published:", published.get("id"))
           PYEOF
