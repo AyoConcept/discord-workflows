@@ -33,3 +33,5 @@ AI tip: keep a "prompt journal." When a prompt works great, save it. In 3 months
 Watch the AI industry, but don't chase every launch. New models drop weekly; your workflow problems change yearly. Solve YOUR problem, not the hype cycle.
 ---POST---
 Automation idea for creators: an AI assistant that turns raw voice notes into polished drafts while keeping your voice. Talk it out, ship it fast.
+---POST---
+1,000 Claude agents just rebuilt a 350 year old math proof in 30 hours. Last time it took 11 days. The lesson is not the math, it is the setup. One lead agent, clear milestones, and a checker that scores every step. That is how you run a swarm without it running off. Claude Fable 5.2 launched Nov 9, $8 per million input tokens.
