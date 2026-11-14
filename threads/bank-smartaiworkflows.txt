@@ -35,3 +35,7 @@ Watch the AI industry, but don't chase every launch. New models drop weekly; you
 Automation idea for creators: an AI assistant that turns raw voice notes into polished drafts while keeping your voice. Talk it out, ship it fast.
 ---POST---
 1,000 Claude agents just rebuilt a 350 year old math proof in 30 hours. Last time it took 11 days. The lesson is not the math, it is the setup. One lead agent, clear milestones, and a checker that scores every step. That is how you run a swarm without it running off. Claude Fable 5.2 launched Nov 9, $8 per million input tokens.
+---POST---
+Google just shipped Orchestrator in Antigravity. One session, two models. Gemini 4 Carbon plans and reviews, Gemini 4 Hydrogen writes the code and runs the tests, and it hands control back when things break. Google says 24 percent less quota and 19 percent faster, with success near Carbon alone. The catch is the price of admission. Carbon Orchestrator is Ultra only.
+---POST---
+Google robots just leveled up. Gemini Robotics 2.5 ran 200 plus tasks and hit 96 percent success on a Mercedes kitting job with Apptronik Apollo 2, on real production lines in Hungary and Germany. Real factory work, not a demo reel. The catch is it is still a proof of concept, not a production line yet.
